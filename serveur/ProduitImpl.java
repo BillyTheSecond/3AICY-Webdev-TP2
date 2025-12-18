@@ -20,6 +20,7 @@ public class ProduitImpl extends UnicastRemoteObject implements Produit {
     private Timer timer;
     private boolean enchereTerminee;
 
+    // constructeur
     public ProduitImpl(String nom, int prix, Date date_fin, String nom_vendeur, String num_vendeur) throws RemoteException {
         super();
         this.nom = nom;
@@ -28,7 +29,7 @@ public class ProduitImpl extends UnicastRemoteObject implements Produit {
         this.nom_vendeur = nom_vendeur;
         this.num_vendeur = num_vendeur;
         this.nom_acheteur = "Aucun";
-        this.clients = new ArrayList<>();
+        this.clients = new ArrayList<>(); // initialiser la liste des clients
         this.enchereTerminee = false;
         
         // Lancer le timer pour la fin des enchères
@@ -48,7 +49,7 @@ public class ProduitImpl extends UnicastRemoteObject implements Produit {
     @Override
     public synchronized void enregistrerClient(ClientCallback client) throws RemoteException {
         clients.add(client);
-        System.out.println("Client enregistré. Total: " + clients.size());
+        System.out.println("Client enregistré. Nb de clients: " + clients.size());
     }
 
     @Override
@@ -80,10 +81,13 @@ public class ProduitImpl extends UnicastRemoteObject implements Produit {
         
         // Notifier tous les clients de la fin
         List<ClientCallback> clientsASupprimer = new ArrayList<>();
+        // on parcourt la liste de tous les clients pour les notifier 1 à 1
         for (ClientCallback client : clients) {
             try {
                 client.finEnchere(nom_acheteur, nom_vendeur, num_vendeur);
             } catch (RemoteException e) {
+                // Si on n'arrive pas à envoyer la notif aux clients et qu'on lève une RemoteException, cela signifie que le clietn est déconnecté, donc on le supprime de la liste
+                // des clients à manipuler
                 System.out.println("Erreur notification client: " + e.getMessage());
                 clientsASupprimer.add(client);
             }

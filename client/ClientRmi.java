@@ -104,7 +104,7 @@ public class ClientRmi extends JFrame{
             e.printStackTrace();
         }
     }
-
+  
     private void encherir() {
         try {
             String pseudo = champPsuedo.getText();
