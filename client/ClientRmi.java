@@ -3,9 +3,14 @@ package client;
 import java.awt.BorderLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.rmi.Naming;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
+import javax.imageio.ImageIO;
+import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -23,6 +28,7 @@ public class ClientRmi extends JFrame{
 
     private JTextField champPsuedo;
     private JTextArea zoneInfoProduit;
+    private JLabel zoneImage;
     private JTextField champEnchere;
     private Produit produit;
     private ClientCallbackImpl callback;
@@ -59,7 +65,8 @@ public class ClientRmi extends JFrame{
         add(new JScrollPane(zoneInfoProduit), BorderLayout.CENTER);
 
         // Zone image
-        
+        zoneImage = new JLabel();
+        add(zoneImage, BorderLayout.EAST);
 
         // Zone boutton enchere
         JPanel bottomPanel = new JPanel();
@@ -87,6 +94,12 @@ public class ClientRmi extends JFrame{
             callback = new ClientCallbackImpl(pseudo, this);
             produit.enregistrerClient(callback);
             updateInfoProduit();
+
+            try {
+                zoneImage.setIcon(recupererImage());
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
         } catch (Exception e) {
             JOptionPane.showMessageDialog(this, "Erreur de connexion: " + e.getMessage());
         }
@@ -115,6 +128,22 @@ public class ClientRmi extends JFrame{
             e.printStackTrace();
             JOptionPane.showMessageDialog(this, "Erreur lors de l'enchère: " + e.getMessage());
         }
+    }
+
+    private BufferedImage resizeImage(BufferedImage originalImage, int targetWidth, int targetHeight) {
+        BufferedImage resizedImage = new BufferedImage(targetWidth, targetHeight, BufferedImage.TYPE_INT_ARGB);
+        java.awt.Graphics2D g2d = resizedImage.createGraphics();
+        g2d.drawImage(originalImage, 0, 0, targetWidth, targetHeight, null);
+        g2d.dispose();
+        return resizedImage;
+    }
+
+    private ImageIcon recupererImage() throws RemoteException, IOException{
+        byte[] imageBytes = produit.getImage();
+        BufferedImage img = ImageIO.read(new ByteArrayInputStream(imageBytes));
+        BufferedImage resizedImg = resizeImage(img, 200, 200);
+        ImageIcon icon = new ImageIcon(resizedImg);
+        return icon;
     }
 
     // Implémentation du callback pour recevoir les notifications

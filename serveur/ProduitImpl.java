@@ -19,9 +19,10 @@ public class ProduitImpl extends UnicastRemoteObject implements Produit {
     private List<ClientCallback> clients;
     private Timer timer;
     private boolean enchereTerminee;
+    private byte[] image;
 
     // constructeur
-    public ProduitImpl(String nom, int prix, Date date_fin, String nom_vendeur, String num_vendeur) throws RemoteException {
+    public ProduitImpl(String nom, int prix, Date date_fin, String nom_vendeur, String num_vendeur, byte[] image) throws RemoteException {
         super();
         this.nom = nom;
         this.prix = prix;
@@ -31,6 +32,7 @@ public class ProduitImpl extends UnicastRemoteObject implements Produit {
         this.nom_acheteur = "Aucun";
         this.clients = new ArrayList<>(); // initialiser la liste des clients
         this.enchereTerminee = false;
+        this.image = image;
         
         // Lancer le timer pour la fin des enchères
         timer = new Timer();
@@ -123,6 +125,11 @@ public class ProduitImpl extends UnicastRemoteObject implements Produit {
     @Override
     public String getNomAcheteur() throws RemoteException {
         return this.nom_acheteur;
+    }
+
+    @Override
+    public byte[] getImage() throws RemoteException {
+        return image;
     }
 
     public Date getDate_fin() {
