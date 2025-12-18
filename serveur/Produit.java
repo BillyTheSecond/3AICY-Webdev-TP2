@@ -10,6 +10,9 @@ public interface Produit extends Remote {
     public int getPrix() throws RemoteException;
     public String getNomAcheteur() throws RemoteException;
     
+    // Client - s'enregistrer pour recevoir les notifications
+    public void enregistrerClient(ClientCallback client) throws RemoteException;
+    
     // Client - placer une enchère
     public void encherir(String pseudoAcheteur, int nouveauPrix) throws RemoteException;
 
