@@ -17,7 +17,7 @@ public class ServeurRmi {
 
             // Créer le produit
             Calendar cal = Calendar.getInstance();
-            cal.add(Calendar.MINUTE, 5); // Enchères pendant 5 minutes
+            cal.add(Calendar.MINUTE, 1); // Enchères pendant 5 minutes
             Date dateFin = cal.getTime();
             
             ProduitImpl produit = new ProduitImpl(
