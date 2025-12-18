@@ -30,11 +30,11 @@ public class ProduitImpl extends UnicastRemoteObject implements Produit {
         this.nom_vendeur = nom_vendeur;
         this.num_vendeur = num_vendeur;
         this.nom_acheteur = "Aucun";
-        this.clients = new ArrayList<>(); // initialiser la liste des clients
+        this.clients = new ArrayList<>();
         this.enchereTerminee = false;
         this.image = image;
         
-        // Lancer le timer pour la fin des enchères
+        // timer pour fin des enchères
         timer = new Timer();
         timer.schedule(new TimerTask() {
             @Override
@@ -83,7 +83,7 @@ public class ProduitImpl extends UnicastRemoteObject implements Produit {
         
         // Notifier tous les clients de la fin
         List<ClientCallback> clientsASupprimer = new ArrayList<>();
-        // on parcourt la liste de tous les clients pour les notifier 1 à 1
+        // on parcourt la liste de tous les clients pour les notifier 1 par 1
         for (ClientCallback client : clients) {
             try {
                 client.finEnchere(nom_acheteur, nom_vendeur, num_vendeur);

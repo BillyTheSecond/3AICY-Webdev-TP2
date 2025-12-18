@@ -17,8 +17,6 @@ import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.SwingUtilities;
 import serveur.ClientCallback;
@@ -28,19 +26,25 @@ import serveur.Produit;
 public class ClientRmi extends JFrame{
 
     private JTextField champPsuedo;
-    private JTextArea zoneInfoProduit;
     private JLabel zoneImage;
     private JTextField champEnchere;
     private Produit produit;
     private ClientCallbackImpl callback;
 
-    // Ajout des labels fixes
+    // état courant
+    private JLabel labelNomObjet;
     private JLabel labelPrixActuel;
     private JLabel labelDernierEncherisseur;
 
+    // Panel fin enchère
+    private JPanel panelFinEnchere;
+    private JLabel labelGagnant;
+    private JLabel labelNomVendeur;
+    private JLabel labelTelVendeur;
+
     public ClientRmi() {
         setTitle("Enchères");
-        setSize(800,600);
+        setSize(600,400);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLayout(new BorderLayout());
 
@@ -53,29 +57,27 @@ public class ClientRmi extends JFrame{
         topPanel.add(btnConnexion);
         add(topPanel, BorderLayout.NORTH);
 
-        // Panel info produit (prix et dernier enchérisseur)
+        // Panel info produit (nom, prix et dernier enchérisseur)
         JPanel infoPanel = new JPanel();
-        infoPanel.setLayout(new BorderLayout());
-        JPanel infoLabelsPanel = new JPanel();
-        infoLabelsPanel.setLayout(new BoxLayout(infoLabelsPanel, BoxLayout.Y_AXIS));
+        infoPanel.setLayout(new BoxLayout(infoPanel, BoxLayout.Y_AXIS));
+        labelNomObjet = new JLabel("Objet: ");
         labelPrixActuel = new JLabel("Prix actuel: ");
         labelDernierEncherisseur = new JLabel("Dernier enchérisseur: ");
-        infoLabelsPanel.add(labelPrixActuel);
-        infoLabelsPanel.add(labelDernierEncherisseur);
-        infoPanel.add(infoLabelsPanel, BorderLayout.NORTH);
-
-        // Zone info produit (historique/messages)
-        zoneInfoProduit = new JTextArea();
-        zoneInfoProduit.setEditable(false);
-        infoPanel.add(new JScrollPane(zoneInfoProduit), BorderLayout.CENTER);
-
-        add(infoPanel, BorderLayout.CENTER);
+        infoPanel.add(labelNomObjet);
+        infoPanel.add(labelPrixActuel);
+        infoPanel.add(labelDernierEncherisseur);
 
         // Zone image
         zoneImage = new JLabel();
-        add(zoneImage, BorderLayout.EAST);
 
-        // Zone boutton enchere
+        // Conteneur central: infos + image
+        JPanel centerPanel = new JPanel();
+        centerPanel.setLayout(new BoxLayout(centerPanel, BoxLayout.Y_AXIS));
+        centerPanel.add(infoPanel);
+        centerPanel.add(zoneImage);
+        add(centerPanel, BorderLayout.CENTER);
+
+        // Zone bouton enchere
         JPanel bottomPanel = new JPanel();
         bottomPanel.add(new JLabel("Votre enchère"));
         champEnchere = new JTextField(10);
@@ -84,6 +86,19 @@ public class ClientRmi extends JFrame{
         bottomPanel.add(btnEnchere);
         add(bottomPanel, BorderLayout.SOUTH);
 
+        // Panel fin enchère
+        panelFinEnchere = new JPanel();
+        panelFinEnchere.setLayout(new BoxLayout(panelFinEnchere, BoxLayout.Y_AXIS));
+        labelGagnant = new JLabel("Gagnant: ");
+        labelNomVendeur = new JLabel("Vendeur: ");
+        labelTelVendeur = new JLabel("Téléphone vendeur: ");
+        panelFinEnchere.add(labelGagnant);
+        panelFinEnchere.add(labelNomVendeur);
+        panelFinEnchere.add(labelTelVendeur);
+        panelFinEnchere.setVisible(false);
+        add(panelFinEnchere, BorderLayout.EAST);
+
+        
         // Action connexion
         btnConnexion.addActionListener(new ActionListener() {
             @Override
@@ -123,13 +138,13 @@ public class ClientRmi extends JFrame{
         }
     }
 
-    // Met à jour les labels fixes et efface la zone info
+    // Mise à jour les labels fixes
     private void updateInfoProduit() {
         try {
+            labelNomObjet.setText("Objet: " + produit.getNom());
             labelPrixActuel.setText("Prix actuel: " + produit.getPrix() + "€");
             labelDernierEncherisseur.setText("Dernier enchérisseur: " + produit.getNomAcheteur());
-            // Optionnel: effacer la zone info ou non
-            // zoneInfoProduit.setText("");
+            panelFinEnchere.setVisible(false);
         } catch (RemoteException e) {
             e.printStackTrace();
         }
@@ -147,7 +162,7 @@ public class ClientRmi extends JFrame{
         }
     }
 
-    // Source ce cette fonction: https://www.baeldung.com/java-resize-image
+    // Source de cette fonction: https://www.baeldung.com/java-resize-image
     private BufferedImage resizeImage(BufferedImage originalImage, int targetWidth, int targetHeight) {
         BufferedImage resizedImage = new BufferedImage(targetWidth, targetHeight, BufferedImage.TYPE_INT_ARGB);
         java.awt.Graphics2D g2d = resizedImage.createGraphics();
@@ -164,7 +179,7 @@ public class ClientRmi extends JFrame{
         return icon;
     }
 
-    // Implémentation du callback pour recevoir les notifications
+    // Implémentation callback pour recevoir les notifs
     static class ClientCallbackImpl extends UnicastRemoteObject implements ClientCallback {
         private String pseudo;
         private ClientRmi parent;
@@ -178,47 +193,24 @@ public class ClientRmi extends JFrame{
         @Override
         public void nouvelleEnchere(String pseudoEncherisseur, int nouveauPrix) throws RemoteException {
             SwingUtilities.invokeLater(() -> {
-                parent.zoneInfoProduit.append("Nouvelle enchère de " + pseudoEncherisseur + ": " + nouveauPrix + "€\n");
-                // Met à jour les labels fixes
                 parent.labelPrixActuel.setText("Prix actuel: " + nouveauPrix + "€");
                 parent.labelDernierEncherisseur.setText("Dernier enchérisseur: " + pseudoEncherisseur);
+                parent.panelFinEnchere.setVisible(false);
             });
         }
 
         @Override
         public void finEnchere(String gagnant, String nomVendeur, String numVendeur) throws RemoteException {
             SwingUtilities.invokeLater(() -> {
-                parent.zoneInfoProduit.append("FIN DES ENCHÈRES ! Gagnant: " + gagnant + "\n");
-                if (gagnant.equals(pseudo)) {
-                    parent.zoneInfoProduit.append("\n" + //
-                                                "Félicitations ! Vous avez remporté l'enchère !\n" + 
-                                                "Coordonnées du vendeur:\n"+
-                                                "  Nom: " + nomVendeur+
-                                                "\n  Téléphone: " + numVendeur);
+                parent.labelGagnant.setText("Gagnant: " + gagnant);
+                if (pseudo.equals(gagnant)) {
+                    parent.labelNomVendeur.setText("Vendeur: " + nomVendeur);
+                    parent.labelTelVendeur.setText("Téléphone vendeur: " + numVendeur);
                 }
+                parent.panelFinEnchere.setVisible(true);
             });
         }
     }
-
-        // @Override
-        // public void finEnchere(String gagnant, String nomVendeur, String numVendeur) throws RemoteException {
-        //     enchereTerminee = true;
-        //     System.out.println("\n========================================");
-        //     System.out.println("FIN DES ENCHÈRES !");
-        //     System.out.println("Gagnant: " + gagnant);
-            
-        //     if (gagnant.equals(pseudo)) {
-        //         System.out.println("\nFélicitations ! Vous avez remporté l'enchère !");
-        //         System.out.println("Coordonnées du vendeur:");
-        //         System.out.println("  Nom: " + nomVendeur);
-        //         System.out.println("  Téléphone: " + numVendeur);
-        //     }
-        //     System.out.println("========================================");
-        // }
-        
-        // public boolean isEnchereTerminee() {
-        //     return enchereTerminee;
-        // }
 
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
