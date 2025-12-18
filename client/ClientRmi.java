@@ -20,7 +20,7 @@ public class ClientRmi {
             Scanner scanner = new Scanner(System.in);
             System.out.print("Entrez votre pseudo: ");
             String pseudo = scanner.nextLine();
-            while (!((pseudo.charAt(0) >= 65 && pseudo.charAt(0) <= 90) || (pseudo.charAt(0) >= 97 && pseudo.charAt(0) <= 122))) {
+            while (pseudo.contentEquals("") || !((pseudo.charAt(0) >= 65 && pseudo.charAt(0) <= 90) || (pseudo.charAt(0) >= 97 && pseudo.charAt(0) <= 122))) {
                 System.out.print("Votre pseudo est invalide, il doit commencer par une lettre\nEntrez votre pseudo :");
                 pseudo = scanner.nextLine();
 
