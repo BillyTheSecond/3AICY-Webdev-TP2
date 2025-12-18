@@ -1,79 +1,69 @@
+package serveur;
 
+import java.rmi.RemoteException;
+import java.rmi.server.UnicastRemoteObject;
 import java.util.Date;
 
-public class ProduitImpl implements Produit {
+public class ProduitImpl extends UnicastRemoteObject implements Produit {
 
     private String nom;
     private int prix;
-    // imageicon pour image avec jFrame
     private Date date_fin;
     private String nom_vendeur;
     private String num_vendeur;
     private String nom_acheteur;
 
-    public ProduitImpl(String nom, int prix, Date date_fin, String nom_vendeur, String num_vendeur, String nom_acheteur) {
+    public ProduitImpl(String nom, int prix, Date date_fin, String nom_vendeur, String num_vendeur) throws RemoteException {
+        super();
         this.nom = nom;
         this.prix = prix;
         this.date_fin = date_fin;
         this.nom_vendeur = nom_vendeur;
         this.num_vendeur = num_vendeur;
-        this.nom_acheteur = nom_acheteur;
+        this.nom_acheteur = "Aucun";
     }
 
-    public void encherir(int prix) {
-        setPrix(prix);
+    @Override
+    public synchronized void encherir(String pseudoAcheteur, int nouveauPrix) throws RemoteException {
+        if (nouveauPrix > this.prix) {
+            this.prix = nouveauPrix;
+            this.nom_acheteur = pseudoAcheteur;
+            System.out.println("Nouvelle enchère: " + pseudoAcheteur + " - " + nouveauPrix + "€");
+        } else {
+            System.out.println("Enchère refusée: prix trop bas");
+        }
     }
 
+    @Override
+    public void annoncerFin() throws RemoteException {
+        System.out.println("Fin des enchères !");
+        System.out.println("Gagnant: " + nom_acheteur + " avec " + prix + "€");
+    }
 
-
-
-
-    public String getNom() {
+    @Override
+    public String getNom() throws RemoteException {
         return this.nom;
     }
 
-    public void setNom(String nom) {
-        this.nom = nom;
-    }
-
-    public int getPrix() {
+    @Override
+    public int getPrix() throws RemoteException {
         return this.prix;
     }
 
-    public void setPrix(int prix) {
-        this.prix = prix;
+    @Override
+    public String getNomAcheteur() throws RemoteException {
+        return this.nom_acheteur;
     }
 
     public Date getDate_fin() {
         return this.date_fin;
     }
 
-    public void setDate_fin(Date date_fin) {
-        this.date_fin = date_fin;
-    }
-
     public String getNom_vendeur() {
         return this.nom_vendeur;
-    }
-
-    public void setNom_vendeur(String nom_vendeur) {
-        this.nom_vendeur = nom_vendeur;
     }
 
     public String getNum_vendeur() {
         return this.num_vendeur;
     }
-
-    public void setNum_vendeur(String num_vendeur) {
-        this.num_vendeur = num_vendeur;
-    }
-
-    public String getNom_acheteur() {
-        return this.nom_acheteur;
-    }
-
-    public void setNom_acheteur(String nom_acheteur) {
-        this.nom_acheteur = nom_acheteur;
-    }
-
 }
