@@ -10,6 +10,7 @@ import java.rmi.Naming;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 import javax.imageio.ImageIO;
+import javax.swing.BoxLayout;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JFrame;
@@ -33,6 +34,10 @@ public class ClientRmi extends JFrame{
     private Produit produit;
     private ClientCallbackImpl callback;
 
+    // Ajout des labels fixes
+    private JLabel labelPrixActuel;
+    private JLabel labelDernierEncherisseur;
+
     public ClientRmi() {
         setTitle("Enchères");
         setSize(800,600);
@@ -48,21 +53,23 @@ public class ClientRmi extends JFrame{
         topPanel.add(btnConnexion);
         add(topPanel, BorderLayout.NORTH);
 
-        // Action connexion
-        btnConnexion.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                if (!champPsuedo.getText().contentEquals("")) {
-                connexionServeur();
-                updateInfoProduit();
-                }
-            }   
-        });
+        // Panel info produit (prix et dernier enchérisseur)
+        JPanel infoPanel = new JPanel();
+        infoPanel.setLayout(new BorderLayout());
+        JPanel infoLabelsPanel = new JPanel();
+        infoLabelsPanel.setLayout(new BoxLayout(infoLabelsPanel, BoxLayout.Y_AXIS));
+        labelPrixActuel = new JLabel("Prix actuel: ");
+        labelDernierEncherisseur = new JLabel("Dernier enchérisseur: ");
+        infoLabelsPanel.add(labelPrixActuel);
+        infoLabelsPanel.add(labelDernierEncherisseur);
+        infoPanel.add(infoLabelsPanel, BorderLayout.NORTH);
 
-        // Zone info produit
+        // Zone info produit (historique/messages)
         zoneInfoProduit = new JTextArea();
         zoneInfoProduit.setEditable(false);
-        add(new JScrollPane(zoneInfoProduit), BorderLayout.CENTER);
+        infoPanel.add(new JScrollPane(zoneInfoProduit), BorderLayout.CENTER);
+
+        add(infoPanel, BorderLayout.CENTER);
 
         // Zone image
         zoneImage = new JLabel();
@@ -76,6 +83,17 @@ public class ClientRmi extends JFrame{
         JButton btnEnchere = new JButton("Enchérir");
         bottomPanel.add(btnEnchere);
         add(bottomPanel, BorderLayout.SOUTH);
+
+        // Action connexion
+        btnConnexion.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if (!champPsuedo.getText().contentEquals("")) {
+                    connexionServeur();
+                    updateInfoProduit();
+                }
+            }   
+        });
 
         // Action encherir
         btnEnchere.addActionListener(new ActionListener() {
@@ -105,19 +123,18 @@ public class ClientRmi extends JFrame{
         }
     }
 
+    // Met à jour les labels fixes et efface la zone info
     private void updateInfoProduit() {
         try {
-            StringBuilder info = new StringBuilder();
-            info.append("Produit: ").append(produit.getNom()).append("\n");
-            info.append("Prix actuel: ").append(produit.getPrix()).append("€\n");
-            info.append("Dernier enchérisseur: ").append(produit.getNomAcheteur()).append("\n");
-            info.append("-----------------------------\n");
-            zoneInfoProduit.append(info.toString());
+            labelPrixActuel.setText("Prix actuel: " + produit.getPrix() + "€");
+            labelDernierEncherisseur.setText("Dernier enchérisseur: " + produit.getNomAcheteur());
+            // Optionnel: effacer la zone info ou non
+            // zoneInfoProduit.setText("");
         } catch (RemoteException e) {
             e.printStackTrace();
         }
     }
-  
+
     private void encherir() {
         try {
             String pseudo = champPsuedo.getText();
@@ -130,6 +147,7 @@ public class ClientRmi extends JFrame{
         }
     }
 
+    // Source ce cette fonction: https://www.baeldung.com/java-resize-image
     private BufferedImage resizeImage(BufferedImage originalImage, int targetWidth, int targetHeight) {
         BufferedImage resizedImage = new BufferedImage(targetWidth, targetHeight, BufferedImage.TYPE_INT_ARGB);
         java.awt.Graphics2D g2d = resizedImage.createGraphics();
@@ -161,6 +179,9 @@ public class ClientRmi extends JFrame{
         public void nouvelleEnchere(String pseudoEncherisseur, int nouveauPrix) throws RemoteException {
             SwingUtilities.invokeLater(() -> {
                 parent.zoneInfoProduit.append("Nouvelle enchère de " + pseudoEncherisseur + ": " + nouveauPrix + "€\n");
+                // Met à jour les labels fixes
+                parent.labelPrixActuel.setText("Prix actuel: " + nouveauPrix + "€");
+                parent.labelDernierEncherisseur.setText("Dernier enchérisseur: " + pseudoEncherisseur);
             });
         }
 
