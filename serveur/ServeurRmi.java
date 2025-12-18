@@ -1,11 +1,16 @@
 package serveur;
 
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.IOException;
 import java.net.MalformedURLException;
 import java.rmi.Naming;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.util.Calendar;
 import java.util.Date;
+import javax.imageio.ImageIO;
 
 public class ServeurRmi {
     
@@ -17,15 +22,21 @@ public class ServeurRmi {
 
             // Créer le produit
             Calendar cal = Calendar.getInstance();
-            cal.add(Calendar.MINUTE, 1); // Enchères pendant 5 minutes
+            cal.add(Calendar.MINUTE, 1); // Enchères pendant 1 minutes
             Date dateFin = cal.getTime();
+
+            BufferedImage img = ImageIO.read(new File("serveur/iphone.jpg"));
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            ImageIO.write(img, "jpg", baos);
+            byte[] imageBytes = baos.toByteArray();
             
             ProduitImpl produit = new ProduitImpl(
                 "iPhone 15 Pro",
                 500,
                 dateFin,
                 "Jean Dupont",
-                "0612345678"
+                "0612345678",
+                imageBytes
             );
             
             // Enregistrer le produit dans le registre
@@ -37,6 +48,8 @@ public class ServeurRmi {
         } catch (RemoteException e) {
             e.printStackTrace();
         } catch (MalformedURLException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
             e.printStackTrace();
         }
     }
